@@ -61,6 +61,8 @@ Outputs in `--output-dir`:
 
 - Skull-stripping is intentionally left to dedicated tools (HD-BET, SynthSeg) —
   the pipeline accepts already skull-stripped input and documents it.
+- Resampling uses the true voxel spacing read from the NIfTI header
+  (anisotropic clinical scans resample to the correct physical extent).
 - Tested on CPU with synthetic data (`tests/test_smoke.py`); public test data:
   [IXI](https://brain-development.org/ixi-dataset/) and
   [OASIS](https://www.oasis-brains.org/).

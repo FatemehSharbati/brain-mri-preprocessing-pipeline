@@ -22,7 +22,7 @@ def main():
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    data, affine, _ = load_nifti(args.input)
+    data, affine, header = load_nifti(args.input)
     print(f"loaded {args.input} shape={data.shape}")
 
     if not args.no_bias:
@@ -34,8 +34,12 @@ def main():
         data, mu, sigma = zscore_normalize(data)
         print(f"  mean={mu:.3f} std={sigma:.3f}")
 
-    print(f"resampling to {args.spacing}mm isotropic ...")
-    data, _ = resample_isotropic(data, target_spacing=args.spacing)
+    # Use the true voxel spacing from the header — assuming 1mm would distort
+    # scans with anisotropic voxels (e.g. 0.9 x 0.9 x 2.0 mm clinical T1w).
+    input_spacing = tuple(float(z) for z in header.get_zooms()[:3])
+    print(f"resampling from {input_spacing}mm to {args.spacing}mm isotropic ...")
+    data, _ = resample_isotropic(data, input_spacing=input_spacing,
+                                 target_spacing=args.spacing)
 
     if args.template:
         print(f"registering to template {args.template} ({args.transform}) ...")

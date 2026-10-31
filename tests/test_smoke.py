@@ -29,6 +29,17 @@ def test_resample():
     assert out.shape[0] > data.shape[0]  # finer grid -> more voxels
 
 
+def test_resample_anisotropic_spacing():
+    # Physical extent must drive the output grid, not an assumed 1mm spacing:
+    # numpy (48, 48, 32) with (2, 2, 3)mm voxels -> physical (64, 96, 144)mm
+    # -> 1mm isotropic grid of numpy shape (144, 96, 64).
+    data = _phantom()
+    out, spacing = resample_isotropic(data, input_spacing=(2.0, 2.0, 3.0),
+                                      target_spacing=1.0)
+    assert spacing == (1.0, 1.0, 1.0)
+    assert out.shape == (144, 96, 64), out.shape
+
+
 def test_qc(tmp_path):
     data = _phantom()
     stats = volume_stats(data)
