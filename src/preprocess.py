@@ -23,6 +23,11 @@ def zscore_normalize(data, mask=None):
     """Z-score normalization. Returns (normalized, mean, std)."""
     data = np.asarray(data, dtype=np.float32)
     vals = data if mask is None else data[np.asarray(mask) > 0]
+    if vals.size == 0:
+        # An empty mask (e.g. an over-aggressive skull-strip) used to fail
+        # silently: mean/std of an empty array are NaN and the whole volume
+        # came out NaN. Fail loudly instead.
+        raise ValueError("mask selects no voxels — cannot compute mean/std")
     mu = float(vals.mean())
     sigma = float(vals.std() + 1e-8)
     return ((data - mu) / sigma).astype(np.float32), mu, sigma

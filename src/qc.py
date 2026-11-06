@@ -11,6 +11,10 @@ def volume_stats(data, mask=None):
     data = np.asarray(data, dtype=np.float32)
     vals = data if mask is None else data[np.asarray(mask) > 0]
     vals = vals[np.isfinite(vals)]
+    if vals.size == 0:
+        # An empty mask (or all-NaN volume) used to crash deep inside
+        # min()/max() with a cryptic zero-size-array error. Fail loudly.
+        raise ValueError("no finite voxels selected — cannot compute stats")
     mean = float(vals.mean())
     std = float(vals.std() + 1e-8)
     return {

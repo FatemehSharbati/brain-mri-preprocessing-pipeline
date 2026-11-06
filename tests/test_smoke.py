@@ -1,5 +1,6 @@
 """Smoke tests on synthetic data — no downloads needed."""
 import numpy as np
+import pytest
 
 from src.io import load_nifti, save_nifti
 from src.preprocess import zscore_normalize, resample_isotropic
@@ -19,6 +20,20 @@ def test_normalize():
     normed, mu, sigma = zscore_normalize(data)
     assert abs(normed.mean()) < 1e-4, normed.mean()
     assert abs(normed.std() - 1.0) < 1e-3, normed.std()
+
+
+def test_normalize_empty_mask_raises():
+    # An empty mask (e.g. an over-aggressive skull-strip) must fail loudly
+    # instead of silently returning a NaN volume.
+    data = _phantom()
+    with pytest.raises(ValueError, match="no voxels"):
+        zscore_normalize(data, mask=np.zeros(data.shape, dtype=bool))
+
+
+def test_volume_stats_empty_mask_raises():
+    data = _phantom()
+    with pytest.raises(ValueError, match="no finite voxels"):
+        volume_stats(data, mask=np.zeros(data.shape, dtype=bool))
 
 
 def test_resample():
